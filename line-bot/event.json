@@ -1,1 +1,15 @@
-{}
+{"events":
+  [
+    {
+      "replyToken":"hogehoge",
+      "source": {
+        "userId": "hugahuga",
+        "type": "user"
+      },
+      "message": {
+        "type": "text",
+        "text": "設定"
+      }
+    }
+  ]
+}
