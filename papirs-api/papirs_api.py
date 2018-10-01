@@ -236,7 +236,7 @@ def generate_design_preview_xml(order_id="", line_item_id=""):
 def check_design(access_token, order_id, line_item_id):
     ENDPOINT_URL = os.environ['PAPIRS_ENDPOINT_URL'] + "/design_preview_xml"
     ENDPOINT_URL = os.environ['PAPIRS_ENDPOINT_URL'] + "/address_preview_xml"
-    ENDPOINT_URL = os.environ['PAPIRS_ENDPOINT_URL'] + "/status_xml"
+    #ENDPOINT_URL = os.environ['PAPIRS_ENDPOINT_URL'] + "/status_xml"
 
     # リクエストパラメータ
     params = {
@@ -310,6 +310,7 @@ line_item_id = 'hugahuga'
 # with open('data/sample.json') as f:
 #     address_info = json.load(f)
 
+# アクセストークンの取得
 # access_token_response = get_token()
 # access_token = access_token_response['access_token']
 # print("access_token response:  ", access_token_response)
