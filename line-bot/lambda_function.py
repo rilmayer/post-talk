@@ -35,8 +35,35 @@ def get_user_item(user_id):
         return user_item
 
 # 初回登録メソッド郡
-# [TODO] confirmationを実装する
-#   例）確認テンプレートなど（https://dev.classmethod.jp/etc/line-messaging-api/）
+# 確認テンプレートの生成
+# （https://dev.classmethod.jp/etc/line-messaging-api/）
+def generate_confirm_template(text):
+    CONFIRM_TEMPLATE = {
+      "type": "template",
+      "altText": "this is a confirm template",
+      "template": {
+          "type": "confirm",
+          "text": "",
+          "actions": [
+              {
+                "type": "message",
+                "label": "はい",
+                "text": "はい"
+              },
+              {
+                "type": "message",
+                "label": "いいえ",
+                "text": "いいえ"
+              }
+          ]
+      }
+    }
+    CONFIRM_TEMPLATE["template"]["text"] = text
+    return CONFIRM_TEMPLATE
+
+
+# 手紙送る用の
+
 
 # 一番初期のユーザー情報登録
 # 引数) ユーザーID
@@ -66,11 +93,17 @@ def first_initial_settings(user_id):
 def save_initial_settings(user_item, message):
     STAGE_MASTER = {
       0:'name',
-      1:'postal_code',
-      2:'address',
-      3:'receiver_name',
-      4:'receiver_postal_code',
-      5:'receiver_address'
+      1:'name_check',
+      2:'postal_code',
+      3:'postal_code_check',
+      4:'address',
+      5:'address_check',
+      6:'receiver_name',
+      7:'receiver_name_check',
+      8:'receiver_postal_code',
+      9:'receiver_postal_code_check',
+      10:'receiver_address',
+      11:'receiver_address_check'
     }
 
     current_user_stage = user_item['user_stage']
@@ -92,33 +125,67 @@ def save_initial_settings(user_item, message):
       'user_stage': next_user_stage
     }
 
-    Item[STAGE_MASTER[current_user_stage]] = message
+    if current_user_stage in [0, 2, 4, 6, 8, 10, 12]:
+        Item[STAGE_MASTER[current_user_stage]] = message
+        response = table.put_item(Item=Item)
+    # チェック
+    elif current_user_stage in [1, 3, 5, 7, 9, 11]:
+        if message == 'はい':
+            pass
+        # 一個前の状態に戻す
+        elif message == 'いいえ':
+            Item['user_stage'] = current_user_stage - 1
+            next_user_stage = current_user_stage - 1
+        else:
+            # 「はい」か「いいえ」で答えてください的なものをしたい
+            Item['user_stage'] = current_user_stage - 1
+            next_user_stage = current_user_stage - 1
+        response = table.put_item(Item=Item)
 
-    response = table.put_item(Item=Item)
     logger.info('user_initial_setting save {}'.format(response))
 
     return next_user_stage
 
 # ユーザーの状態に応じて必要な情報登録を促す
 # ユーザーIDを引数として、次に必要なメッセージを返す
-def initial_setting_message(current_user_stage, user_item):
+def initial_setting_message(current_user_stage, user_item, message_text):
     user_stage = current_user_stage
 
     # ステージごとに適切なメッセージを返す
     # [TODO] 番号とメッセージが対応したdictを作る
+    message_type = 'text'
+    reply_text = ""
     if user_stage == 0:
-        return "初期設定を開始します。\nはじめに、「あなたの名前」を教えてください"
+        reply_text = "初期設定を開始します。\nはじめに、「あなたの名前」を教えてください"
     elif user_stage == 1:
-        return "次に、「あなたの郵便番号」を教えてください"
+        reply_text = "あなたの名前は「" + message_text + "」ですか？"
+        message_type = 'confirm'
     elif user_stage == 2:
-        return "「あなたの住所」を教えてください"
+        reply_text = "次に、「あなたの郵便番号」を教えてください"
     elif user_stage == 3:
-        return "次に、手紙を送りたい「相手の名前」を教えてください"
+        reply_text = "あなたの郵便番号は「" + message_text + "」ですか？"
+        message_type = 'confirm'
     elif user_stage == 4:
-        return "手紙を送りたい「相手の郵便番号」を教えてください"
+        reply_text = "「あなたの住所」を教えてください"
     elif user_stage == 5:
-        return "手紙を送りたい「相手の住所」を教えてください"
+        reply_text = "あなたの住所は「" + message_text + "」ですか？"
+        message_type = 'confirm'
     elif user_stage == 6:
+        reply_text = "次に、手紙を送りたい「相手の名前」を教えてください"
+    elif user_stage == 7:
+        reply_text = "相手の名前は「" + message_text + "」ですか？"
+        message_type = 'confirm'
+    elif user_stage == 8:
+        reply_text = "手紙を送りたい「相手の郵便番号」を教えてください"
+    elif user_stage == 9:
+        reply_text = "相手の郵便番号は「" + message_text + "」ですか？"
+        message_type = 'confirm'
+    elif user_stage == 10:
+        reply_text = "手紙を送りたい「相手の住所」を教えてください"
+    elif user_stage == 11:
+        reply_text = "相手の住所は「" + user_item['receiver_address'] + "」ですか？"
+        message_type = 'confirm'
+    elif user_stage == 12:
         message = "設定は完了しました。設定情報は以下の通りです。\n"
         settings = [
             "1. あなたの「名前」: " + user_item['name'],
@@ -128,10 +195,19 @@ def initial_setting_message(current_user_stage, user_item):
             "5. 相手の「郵便番号」: " + user_item['receiver_postal_code'],
             "6. 相手の「住所」: " + user_item['receiver_address']
             ]
-        message = message + "\n".join(settings)
-        return message
-    elif user_stage == 7:
-        return "設定は完了しています。何か変更したいですか？\n設定を確認したい場合は「設定」、設定を変更したい場合は「変更」と入力してください。"
+        reply_text = message + "\n".join(settings)
+    elif user_stage == 13:
+        reply_text = "設定は完了しています。何か変更したいですか？\n設定を確認したい場合は「設定」、設定を変更したい場合は「変更」と入力してください。"
+
+    # 返すメッセージ
+    if message_type == 'text':
+        message = {
+        'type': 'text',
+        'text': '【デバッグモード】\n\nmessage:\n' + str(reply_text) + "\n\nYour message:\n"}
+    elif message_type == 'confirm':
+        message = generate_confirm_template("【デバッグモード】" + reply_text)
+    return message
+
 
 
 # LINEから画像データを取得する関数（一応用意）
@@ -145,7 +221,7 @@ def get_line_image(message_id):
 # ユーザーステージ(user_stage)という概念を導入
 #   ユーザーの状態に応じて、表示するメッセージの内容を変更する
 # null ... 友達登録時
-# 0 <= user_steage < 7 ... 初期設定時
+# 0 <= user_steage < 13 ... 初期設定時
 # 100 ... 通常時
 # 100 < user_steage ... 手紙作成時
 
@@ -168,11 +244,16 @@ def lambda_handler(event, context):
     if event.get('from_local_curl') is not None:
         ENVIRONMENT = 'dev'
 
+    # LINEリプライの内容
+    payload = {
+            'replyToken': "",
+            'messages': []
+        }
+
     # LINE messgaging API handler
     for event in event['events']:
-        reply_token = event['replyToken']
+        payload['replyToken'] = event['replyToken']
         source = event['source']
-        #'userId': 'Ue9602be92a382d2226996894378836f5', 'type': 'user'
         user_id = source['userId']
         message = event['message']
 
@@ -190,48 +271,50 @@ def lambda_handler(event, context):
 
             # データ未登録ユーザー
             if user_item is None:
-                reply_message = 'このアプリでは初期設定が必要です。初期設定をする場合は「初期設定」と入力してください。\n初期設定は約3分ほどで終了します。'
+                reply_text = 'このアプリでは初期設定が必要です。初期設定をする場合は「初期設定」と入力してください。\n初期設定は約3分ほどで終了します。'
+                reply_message = {
+                    'type': 'text',
+                    'text': reply_text}
 
                 # データ登録をスタート
                 #   → ユーザーデータの初期化を行い、
                 #     初期設定中ステータスに変更（user_stageを0にセット）
                 if '初期設定' in message_text:
                     current_user_stage = first_initial_settings(user_id)
-                    reply_message = initial_setting_message(current_user_stage, user_item)
+                    reply_message = initial_setting_message(current_user_stage, user_item, message_text)
 
             # データ登録のあるユーザー
             else:
                 user_stage = user_item['user_stage']
 
                 # 初期設定中は「user_stage」変数が0〜5のどれかになる
-                if user_stage >= 0 and user_stage < 6:
+                if user_stage >= 0 and user_stage < 12:
                     current_user_stage = save_initial_settings(user_item, message_text)
-                    reply_message = initial_setting_message(current_user_stage, user_item)
+                    reply_message = initial_setting_message(current_user_stage, user_item, message_text)
 
                 # 手紙作成時は「user_stage」変数が100〜？
-                # [WIP]
+                elif 100 > user_stage:
 
-                # 初期設定の終わったユーザーへのメッセージ
+
+                # 初期設定の終わった通常状態ユーザーへのメッセージ
                 else:
                     if '設定' in message_text:
-                        current_user_stage = 6
-                        reply_message = initial_setting_message(current_user_stage, user_item)
+                        current_user_stage = 12
+                        reply_message = initial_setting_message(current_user_stage, user_item, message_text)
                     elif '変更' in message_text:
                         reply_message = '現在変更機能を追加中です。'
+                    elif '手紙を送る':
+                        reply_message = '現在変更機能を追加中です。'
                     else:
-                        current_user_stage = 7
-                        reply_message = initial_setting_message(current_user_stage, user_item)
+                        current_user_stage = 13
+                        reply_message = initial_setting_message(current_user_stage, user_item, message_text)
                         # = "hello! your message is : " + message['text'] # question_handller(message['text'])
         else:
             reply_message = ""
 
-        payload = {
-            'replyToken': reply_token,
-            'messages': []
-        }
-        payload['messages'].append({
-                'type': 'text', 'text': '【デバッグモード】\n\nmessage:\n' + str(reply_message) + "\n\nevent:\n" + str(event)
-            })
+        # 開発環境の場合、いろいろ返す形にする
+        # reply_message = event
+        payload['messages'].append(reply_message)
 
         if ENVIRONMENT == 'dev':
             status_code = 200
