@@ -1,6 +1,7 @@
 @charset "utf-8";
 @import "material-icons";
 @import "normalize";
+@import url('https://fonts.googleapis.com/css?family=Sawarabi+Mincho');
 
 $color-base: #fafafa;
 $color-main: #322;
@@ -8,7 +9,10 @@ $color-acce: #f00;
 
 body{
   background: $color-base;
+  background-image: url(../images/paper.png);
+  background-size: 72px;
   color: $color-main;
+  font-family: 'Sawarabi Mincho', sans-serif;
 }
 
 main{
