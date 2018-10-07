@@ -19,6 +19,7 @@ pip install -r requirements.txt -t ./site-packages
 # 開発環境
 export LINE_POST_ENVIRONMENT=dev
 export LINE_CHANNEL_ACCESS_TOKEN=hogehoge
+export DYNAMO_TABLE_NAME=hugahuga
 ```
 
 ### テスト実行（ローカルテスト）
@@ -40,7 +41,7 @@ sh upload.sh
 
 ### テスト（デプロイ後）
 ```
-curl https://kxnyf4pbgk.execute-api.ap-northeast-1.amazonaws.com/prod/line-post/ -X POST -d '{"from_local_curl": "true", "events":[{"replyToken":"hogehoge", "source": {"userId": "local_user"}, "message": {"type": "text", "text": "こんにちは"}}]}'
+curl hoge.com -X POST -d '{"from_local_curl": "true", "events":[{"replyToken":"hogehoge", "source": {"userId": "local_user"}, "message": {"type": "text", "text": "こんにちは"}}]}'
 ```
 
 ### Lambdaのコンソール画面で設定（WIP）

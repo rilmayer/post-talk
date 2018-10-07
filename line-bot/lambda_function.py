@@ -6,6 +6,9 @@ import codecs
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
+from initial_settings import first_settings
+from send_letter import initialize_letter_info
+
 sys.path.append('./site-packages')
 
 import requests
@@ -13,25 +16,10 @@ import requests
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Dynamoテーブル
+DYNAMO_TABLE_NAME = os.environ['DYNAMO_TABLE_NAME']
 
-# ユーザーの情報をDynamoから取得する
-# データが入力されていなければ None を返す
-# 返り値) ユーザー情報のdict
-def get_user_item(user_id):
-    # Dynamo table
-    dynamodb = boto3.resource('dynamodb')
-    table    = dynamodb.Table('line-post-dev')
-
-    # 過去に登録のあったユーザーはデータ取得
-    response = table.get_item( Key={'user_id': user_id} )
-    logger.info('user_initial_setting get {}'.format(response))
-
-    if response.get('Item') is None:
-        return None
-    else:
-        user_item = response['Item']
-        return user_item
-
+# LINE用 メッセージテンプレート生成関数
 # テキストメッセージテンプレートの生成
 def generate_text_template(text):
     TEXT_TEMPLATE = {
@@ -40,10 +28,7 @@ def generate_text_template(text):
                     }
     return TEXT_TEMPLATE
 
-
-# 初回登録メソッド郡
 # 確認テンプレートの生成
-# （https://dev.classmethod.jp/etc/line-messaging-api/）
 def generate_confirm_template(text):
     CONFIRM_TEMPLATE = {
       "type": "template",
@@ -69,26 +54,44 @@ def generate_confirm_template(text):
     CONFIRM_TEMPLATE["altText"] = text + CONFIRM_TEMPLATE["altText"]
     return CONFIRM_TEMPLATE
 
+# ユーザーの情報をDynamoから取得する関数
+def get_user_item(user_id):
+    dynamodb = boto3.resource('dynamodb')
+    table    = dynamodb.Table(DYNAMO_TABLE_NAME)
 
-# 一番初期のユーザー情報登録
+    # 過去に登録のあったユーザーはデータ取得
+    response = table.get_item( Key={'user_id': user_id} )
+    logger.info('user_initial_setting get {}'.format(response))
+
+    if response.get('Item') is None:
+        return None
+    else:
+        user_item = response['Item']
+        return user_item
+
+# 最初のユーザー情報登録
 # 引数) ユーザーID
 # 返り値) ユーザーの情報登録進み具合（数値）
 def first_initial_settings(user_id):
     # Dynamo table
     dynamodb = boto3.resource('dynamodb')
-    table    = dynamodb.Table('line-post-dev') # [TODO] 環境変数への移行
+    table    = dynamodb.Table(DYNAMO_TABLE_NAME) # [TODO] 環境変数への移行
 
-    # [TODO] 初期値はベタ書きせずに切り出す
+    # [TODO] 初期値の定義はどっかの関数とかに切り出す
     Item = {
-      'user_id': user_id,
-      'name': "名無し",
-      'postal_code': "0000000",
-      'address': "住所が設定されていません",
-      'receiver_name': "名無し",
-      'receiver_postal_code': "0000000",
-      'receiver_address': "住所が設定されていません",
-      'user_stage': 0
+      'user_id': user_id, # ユーザーID / LINEのID（str）
+      'name': "名無し", # ユーザーの名前（str）
+      'postal_code': "0000000", # ユーザーの郵便番号（str）
+      'address': "住所が設定されていません", # ユーザーの住所（str）
+      'receiver_name': "名無し", # 相手の名前（str）
+      'receiver_postal_code': "0000000", # 相手の郵便番号（str）
+      'receiver_address': "住所が設定されていません", # 相手の住所（str）
+      'letter_transaction': [], # 手紙送信情報の履歴、発送状況のステータス（list）
+      'tmp_letter_transaction': # 手紙情報の一時情報を格納（dict）
+          {'messages':[], 'urls':{}},
+      'user_stage': 0 # ユーザーの状態管理用の数値
     }
+
     response = table.put_item(Item=Item)
     logger.info('user_initial_setting save {}'.format(response))
 
@@ -117,7 +120,7 @@ def save_initial_settings(user_item, message):
 
     # Dynamo table
     dynamodb = boto3.resource('dynamodb')
-    table    = dynamodb.Table('line-post-dev')
+    table    = dynamodb.Table(DYNAMO_TABLE_NAME)
 
     Item = {
       'user_id': user_id,
@@ -127,6 +130,9 @@ def save_initial_settings(user_item, message):
       'receiver_name': user_item['receiver_name'],
       'receiver_postal_code': user_item['receiver_postal_code'],
       'receiver_address': user_item['receiver_address'],
+      'letter_transaction': [],
+      'tmp_letter_transaction': {'messages':[],
+                                 'urls':{},},
       'user_stage': next_user_stage
     }
 
@@ -142,7 +148,7 @@ def save_initial_settings(user_item, message):
             Item['user_stage'] = current_user_stage - 1
             next_user_stage = current_user_stage - 1
         else:
-            # 「はい」か「いいえ」で答えてください的なものをしたい
+            # [TODO] 「はい」か「いいえ」で答えてください的なものをしたい
             Item['user_stage'] = current_user_stage - 1
             next_user_stage = current_user_stage - 1
         response = table.put_item(Item=Item)
@@ -216,7 +222,6 @@ def initial_setting_message(current_user_stage, user_item, message_text):
 
 # 手紙の内容を取得
 
-
 # LINEから画像データを取得する関数（一応用意）
 def get_line_image(message_id):
     line_url = 'https://api.line.me/v2/bot/message/'+ message_id +'/content'
@@ -233,6 +238,8 @@ def get_line_image(message_id):
 # 100 ... 通常時
 # 100 < user_steage ... 手紙作成時
 def lambda_handler(event, context):
+    logger.info('got event {}'.format(event))
+
     # LINE APIの設定 [TODO] 環境変数にしたい
     LINE_API_ENDPOINT = 'https://api.line.me/v2/bot/message/reply'
 
@@ -244,18 +251,21 @@ def lambda_handler(event, context):
     # 開発環境
     ENVIRONMENT = os.environ['LINE_POST_ENVIRONMENT']
 
-    # ログ出力
-    # logger.info('got event {}'.format(event))
-
     # 呼び出し元がLINE以外のとき（開発用）
     if event.get('from_local_curl') is not None:
         ENVIRONMENT = 'dev'
+
+    # Dynamo table
+    dynamodb = boto3.resource('dynamodb')
+    table    = dynamodb.Table(DYNAMO_TABLE_NAME)
+
 
     # LINEリプライの内容
     payload = {
             'replyToken': "",
             'messages': []
         }
+    reply_messages = []
 
     # LINE messgaging API handler
     for event in event['events']:
@@ -276,7 +286,7 @@ def lambda_handler(event, context):
         elif message['type'] == 'text':
             message_text = message['text']
 
-            # データ未登録ユーザー
+            # 初期設定がまだのユーザーの場合
             if user_item is None:
                 reply_text = 'このアプリでは初期設定が必要です。初期設定をする場合は「初期設定」と入力してください。\n初期設定は約3分ほどで終了します。'
                 reply_message = generate_text_template(reply_text)
@@ -292,15 +302,17 @@ def lambda_handler(event, context):
             else:
                 user_stage = user_item['user_stage']
 
-                # 初期設定中は「user_stage」変数が0〜5のどれかになる
+                # 初期設定中は「user_stage」変数が0〜12のどれかになる
                 if user_stage >= 0 and user_stage < 12:
                     current_user_stage = save_initial_settings(user_item, message_text)
                     reply_message = initial_setting_message(current_user_stage, user_item, message_text)
 
-                # 手紙作成時は「user_stage」変数が100〜？
-                elif user_stage > 100:
-                    pass
+                # 手紙作成時は「user_stage」変数が100〜109
+                elif user_stage >= 100 and user_stage < 107:
+                    user_item, reply_messages = initialize_letter_info(user_item, message_text)
 
+                    response = table.put_item(Item=user_item)
+                    logger.info('Dynamo save: {}'.format(response))
 
                 # 初期設定の終わった通常状態ユーザーへのメッセージ
                 else:
@@ -309,7 +321,19 @@ def lambda_handler(event, context):
                         current_user_stage = 12
                         reply_text = initial_setting_message(current_user_stage, user_item, message_text)['text']
                     elif '手紙を送る' in message_text:
-                        reply_text = user_item['receiver_name'] + 'さんへ送る手紙の内容を入力してください。'
+                        # 手紙の送信状況を確認
+                        status = user_item['letter_transaction'][-1].get('status')
+                        if status == 'work_in_sending':
+                            current_user_stage = 13
+                            reply_text = '最後に受け付けた手紙がまだ発送作業中です。発送作業が終了しましたら、新しい手紙を送ることができます。'
+                        elif status is None or status == 'sending_complete':
+                            user_stage = 101
+                            user_item['user_stage'] = user_stage
+                            response = table.put_item(Item=user_item)
+                            reply_text = user_item['receiver_name'] + 'さんへ送る手紙の内容を入力してください。\n注意点\n※ 改行は無視されます。\n※ ひとつのメッセージが1段落として手紙が作成されます。\n※ 合計3段落、300文字まで入力できます。」\n「入力し終わったら「おわり」と入力してください'
+                        else:
+                            current_user_stage = 13
+                            reply_text = '最後に受け付けた手紙の発送作業が終了しましたら、新しい手紙を送ることができます。'
                     elif '手紙を撮影' in message_text:
                         reply_text = '写真をこのルームにアップロードしてください。'
                     elif 'やりとりを見る' in message_text:
@@ -317,8 +341,10 @@ def lambda_handler(event, context):
                     elif '新しい相手の登録' in message_text:
                         reply_text = '現在機能追加中'
                     elif '設定の変更' in message_text:
-                        reply_text = '現在機能追加中'
-
+                        reply_text = '初期設定を変更します。「あなたの名前」を教えてください。'
+                        next_user_stage = 1
+                        user_item['user_stage'] = next_user_stage
+                        response = table.put_item(Item=user_item)
                     else:
                         current_user_stage = 13
                         reply_text = initial_setting_message(current_user_stage, user_item, message_text)['text']
@@ -329,7 +355,10 @@ def lambda_handler(event, context):
 
         # 開発環境の場合、いろいろ返す形にする
         # reply_message = event
-        payload['messages'].append(reply_message)
+        if len(reply_messages) > 0:
+            payload['messages'] = reply_messages
+        else:
+            payload['messages'].append(reply_message)
 
         if ENVIRONMENT == 'dev':
             status_code = 200
