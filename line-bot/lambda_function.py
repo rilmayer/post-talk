@@ -131,8 +131,7 @@ def save_initial_settings(user_item, message):
       'receiver_postal_code': user_item['receiver_postal_code'],
       'receiver_address': user_item['receiver_address'],
       'letter_transaction': [],
-      'tmp_letter_transaction': {'messages':[],
-                                 'urls':{},},
+      'tmp_letter_transaction': {'messages':[],'urls':{}},
       'user_stage': next_user_stage
     }
 
@@ -221,8 +220,7 @@ def initial_setting_message(current_user_stage, user_item, message_text):
 
 
 # 手紙の内容を取得
-
-# LINEから画像データを取得する関数（一応用意）
+# LINEから画像データを取得する関数
 def get_line_image(message_id):
     line_url = 'https://api.line.me/v2/bot/message/'+ message_id +'/content'
     result = requests.get(line_url, headers=LINE_API_HEADERS)
@@ -231,12 +229,14 @@ def get_line_image(message_id):
 
 
 # ＜コアロジックの概要＞
-# ユーザーステージ(user_stage)という概念を導入
+# ユーザーステージ(user_stage: Int)という概念を導入
 #   ユーザーの状態に応じて、表示するメッセージの内容を変更する
-# null ... 友達登録時
-# 0 <= user_steage < 13 ... 初期設定時
-# 100 ... 通常時
-# 100 < user_steage ... 手紙作成時
+#
+# ＜user_stageの中身＞
+#   null ... 友達登録時
+#   0 <= user_steage < 13 ... 初期設定時
+#   13 ... 通常時
+#   100 < user_steage ... 手紙作成時
 def lambda_handler(event, context):
     logger.info('got event {}'.format(event))
 
@@ -353,13 +353,13 @@ def lambda_handler(event, context):
         else:
             reply_message = ""
 
-        # 開発環境の場合、いろいろ返す形にする
         # reply_message = event
         if len(reply_messages) > 0:
             payload['messages'] = reply_messages
         else:
             payload['messages'].append(reply_message)
 
+        # [TODO] 開発環境の場合、いろいろ返す形にする
         if ENVIRONMENT == 'dev':
             status_code = 200
             return {"event": str(event), "payload": str(payload)}
