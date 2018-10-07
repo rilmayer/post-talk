@@ -5,7 +5,7 @@
 LINE Messaging APIを用いています。
 
 ## システム構成
-![system](https://github.com/rilmayer/post-talk/docs/images/POST TALK.png)
+![system](https://github.com/rilmayer/post-talk/docs/images/POST_TALK.png)
 
 ## ファイル構成
 - `/line-bot` ... LINE Messaging APIを使ってやりとりを行う
