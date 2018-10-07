@@ -1,10 +1,10 @@
 @charset "utf-8";
-@import "material-icons";
+// @import "material-icons";
 @import "normalize";
 @import url('https://fonts.googleapis.com/css?family=Sawarabi+Mincho');
 
 $color-base: #fafafa;
-$color-main: #322;
+$color-main: #210;
 $color-acce: #C90;
 
 html{
@@ -17,9 +17,16 @@ body{
   background-image: url(../images/bg.jpg);
   background-attachment: fixed;
   background-size: cover;
-  color: $color-main;
+  color: rgba($color-main,.7);
   font: 1.6rem/1.8 'Sawarabi Mincho', sans-serif;
   font-feature-settings : "pwid";
+}
+
+a{
+  color: lighten($color-acce,5%);
+  &:hover, &:sctive, &:visited {
+    color: darken($color-acce, 10%);
+  }
 }
 
 .cta{
@@ -31,12 +38,13 @@ body{
   height: 5rem;
   line-height: 5rem;
   text-align: center;
-  background: rgba(#210,.5);
+  background: rgba($color-main,.5);
   color: #fff;
   font-weight: bold;
   text-decoration: none;
   border-radius: 4px;
   transition: .3s ease;
+  margin: 2.4rem auto 0;
   @media (max-width: 480px){
     width: 80%;
   }
@@ -69,7 +77,7 @@ header{
     position: absolute;
     top: 40%;
     left: calc(50% - 20rem);
-    filter: drop-shadow(0 0 8px rgba(#210,.2));
+    filter: drop-shadow(0 0 8px rgba($color-main,.2));
     @media (max-width: 480px){
       width: 80%;
       left: 10%;
@@ -88,7 +96,7 @@ header{
     pointer-events: none;
   }
   p{
-    color: rgba(#210,.5);
+    color: rgba($color-main,.4);
     font-weight: bold;
     font-size: 1.8rem;
     margin: 4rem auto 0;
@@ -130,4 +138,113 @@ header{
 section{
   background-image: url(../images/paper.png);
   background-size: 144px;
+  padding: 10rem calc(50% - 600px);
+  @media (max-width: 1264px){
+    padding: 8rem 32px;
+  }
+  @media (max-width: 480px){
+    padding: 6rem 16px;
+  }
+  &:nth-child(odd){
+    background-image: url(../images/paper-2.png);
+  }
+  h2{
+    margin: 0;
+    color: $color-acce;
+    border-left: 4px solid $color-acce;
+    padding: 2rem 1.6rem 1rem;
+    font-size: 2.2rem;
+  }
+  p{
+    text-align: justify;
+  }
+  .lead{
+    text-align: center;
+    letter-spacing: .1em;
+    opacity: .8;
+    margin: 0;
+  }
+  &#what{
+    overflow: auto;
+    img{
+      float: right;
+      margin-top: 2rem;
+      width: 40rem;
+      @media (max-width: 768px){
+        float: none;
+        width: 70%;
+      }
+      @media (max-width: 480px){
+        width: 100%;
+      }
+    }
+    div{
+      width: calc(100% - 44rem);
+      float: left;
+      @media (max-width: 768px){
+        float: none;
+        width: 100%;
+      }
+    }
+    em{
+      font-weight: bold;
+      font-size: 1.2em;
+      font-style: normal;
+    }
+    p:nth-of-type(1)::first-letter{
+      font-size: 2.8em;
+      line-height: 1;
+      float: left;
+      margin: 0 .2em 0 0;
+      padding: .1em 0 0;
+    }
+  }
+  &#howto{
+    ol{
+      // counter-reset:カウンタ名;
+      // list-style: none;
+    }
+    // li:before {
+    //   counter-increment: カウンタ名; /* 任意の名前を付ける（もちろん英語で） */
+    //   content: counter(カウンタ名); /* 名前を付けたカウンターをcontentで発動！ */
+    // }
+  }
+  &#system{
+    img{
+      width: 100%;
+      margin-top: 2rem;
+    }
+  }
+}
+
+footer{
+  text-align: center;
+  padding: 6rem 16px 8rem;
+  color: #fff;
+  background-color: $color-acce;
+  background-image: url(../images/symbol-white.png);
+  background-position: bottom -3rem left -2rem;
+  background-size: 32rem;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  p{
+    letter-spacing: .05em;
+    font-weight: bold
+  }
+  a{
+    color: #fff;
+  }
+  ul{
+    list-style: none;
+    margin: 2rem auto 0;
+    padding: 0;
+  }
+  li{
+    opacity: .6;
+    &:hover{ opacity: .8; }
+  }
+  small{
+    display: block;
+    margin: 4rem auto 0;
+  }
 }
