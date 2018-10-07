@@ -41,6 +41,19 @@ exports.handler = async (event, context, callback) => {
             printBackground: true
         });
 
+        const fileName = "postalk-" + uuidv1();
+        const jpegBuf = await page.screenshot({
+            type: "jpeg",
+            fullPage: true
+        });
+        const s3 = new AWS.S3();
+        await s3.putObject({
+            ACL: "public-read",
+            Bucket: SAVE_BUCKET_NAME,
+            Key: fileName + ".jpeg",
+            Body: jpegBuf
+        }).promise();
+
         await page.goto('https://postalk-letter-dev.herokuapp.com/letter_back' + urlParams, {
             waitUntil: 'domcontentloaded'
         });
@@ -55,12 +68,10 @@ exports.handler = async (event, context, callback) => {
         const outputFileName = '/tmp/output.pdf';
         child_process.execSync('pdftk A=/tmp/front.pdf B=/tmp/back.pdf cat A1 B1 output ' + outputFileName);
         const output = fs.readFileSync(outputFileName);
-        const s3 = new AWS.S3();
-        const fileName = "postalk-" + uuidv1() + '.pdf';
         await s3.putObject({
             ACL: "public-read",
             Bucket: SAVE_BUCKET_NAME,
-            Key: fileName,
+            Key: fileName + ".pdf",
             Body: output
         }).promise();
 
@@ -68,7 +79,10 @@ exports.handler = async (event, context, callback) => {
             "statusCode": 200,
             "body": JSON.stringify({
                 result: 'OK',
-                link: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + "/" + fileName,
+                pdf: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + "/" + fileName + ".pdf",
+                jpeg: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + "/" + fileName + ".jpeg",
+                thumbnail: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + ".resize/" + fileName + "-thumbnail.jpeg",
+                preview: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + ".resize/" + fileName + "-preview.jpeg"
             }),
             "isBase64Encoded": false
         });
