@@ -1,4 +1,4 @@
-# ![ぽすとーく](https://github.com/rilmayer/post-talk/blob/master/design/logo.svg)
+# <img src="https://github.com/rilmayer/post-talk/blob/master/design/logo.svg" width="320px">
 ぽすとーくはLINE BOTによる手紙を用いたコミュニケーション支援のアプリです。
 
 ## 概要
