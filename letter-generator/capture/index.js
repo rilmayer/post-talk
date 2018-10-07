@@ -24,9 +24,15 @@ exports.handler = async (event, context, callback) => {
         });
         page = await browser.newPage();
 
-        await page.goto('https://postalk-letter-dev.herokuapp.com/letter_front?message=' + data.message, {
-            waitUntil: 'domcontentloaded'
-        });
+        await page.goto('https://postalk-letter-dev.herokuapp.com/letter_front?message=' + data.message.join('\n') +
+            "?sender_name=" + data.sender_name +
+            "?sender_address=" + data.sender_address +
+            "?sender_postal_code=" + data.sender_postal_code +
+            "?receiver_name=" + data.receiver_name +
+            "?receiver_address=" + data.receiver_address +
+            "?reverver_postal_code=" + data.receiver_postal_code, {
+                waitUntil: 'domcontentloaded'
+            });
         // await page.evaluate(() => {
         //     var style = document.createElement('style');
         //     style.textContent = `
@@ -39,7 +45,7 @@ exports.handler = async (event, context, callback) => {
         //         el.style.fontFamily = "'Source Code Pro', 'Noto Sans JP', monospace";
         //     });
         // });
-        // await page.waitFor(5000);
+        await page.waitFor(1000);
         const pdfBuf = await page.pdf({
             printBackground: true
         });
