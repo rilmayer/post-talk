@@ -17,43 +17,43 @@ exports.handler = async (event, context, callback) => {
 
     try {
         const data = JSON.parse(event.body);
+        const urlParams = "?message=" + data.message.join('\n') +
+            "&sender_name=" + data.sender_name +
+            "&sender_address=" + data.sender_address +
+            "&sender_postal_code=" + data.sender_postal_code +
+            "&receiver_name=" + data.receiver_name +
+            "&receiver_address=" + data.receiver_address +
+            "&receiver_postal_code=" + data.receiver_postal_code
 
         slsChrome = await launchChrome();
         browser = await puppeteer.connect({
             browserWSEndpoint: (await CDP.Version()).webSocketDebuggerUrl
         });
         page = await browser.newPage();
-        const url = 'https://postalk-letter-dev.herokuapp.com/letter_front?message=' + data.message.join('\n') +
-            "&sender_name=" + data.sender_name +
-            "&sender_address=" + data.sender_address +
-            "&sender_postal_code=" + data.sender_postal_code +
-            "&receiver_name=" + data.receiver_name +
-            "&receiver_address=" + data.receiver_address +
-            "&reverver_postal_code=" + data.receiver_postal_code
-        await page.goto(url, {
+        await page.goto('https://postalk-letter-dev.herokuapp.com/letter_front' + urlParams, {
             waitUntil: 'domcontentloaded'
         });
-        const pdfBuf = await page.pdf({
+        await page.waitFor(1000)
+        await page.pdf({
             path: "/tmp/front.pdf",
+            width: '250mm',
+            height: '176mm',
             printBackground: true
         });
 
-        await page.goto('https://postalk-letter-dev.herokuapp.com/letter_back?message=' + data.message.join('\n') +
-            "?sender_name=" + data.sender_name +
-            "?sender_address=" + data.sender_address +
-            "?sender_postal_code=" + data.sender_postal_code +
-            "?receiver_name=" + data.receiver_name +
-            "?receiver_address=" + data.receiver_address +
-            "?reverver_postal_code=" + data.receiver_postal_code, {
-                waitUntil: 'domcontentloaded'
-            });
-        const pdfBuf2 = await page.pdf({
+        await page.goto('https://postalk-letter-dev.herokuapp.com/letter_back' + urlParams, {
+            waitUntil: 'domcontentloaded'
+        });
+        await page.waitFor(1000)
+        await page.pdf({
             path: "/tmp/back.pdf",
+            width: '250mm',
+            height: '176mm',
             printBackground: true
         });
 
         const outputFileName = '/tmp/output.pdf';
-        child_process.execSync('pdftk /tmp/front.pdf /tmp/back.pdf output ' + outputFileName);
+        child_process.execSync('pdftk A=/tmp/front.pdf B=/tmp/back.pdf cat A1 B1 output ' + outputFileName);
         const output = fs.readFileSync(outputFileName);
         const s3 = new AWS.S3();
         const fileName = "postalk-" + uuidv1() + '.pdf';
