@@ -1,7 +1,7 @@
 zip -r ./upload.zip *
 aws lambda \
     update-function-code \
-    --function-name {lambda_function_name} \
+    --function-name line-post-messaging \
     --zip-file fileb://./upload.zip \
     --publish
 rm -rf ./upload.zip

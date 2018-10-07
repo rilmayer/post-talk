@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "npm run css -- -w --source-map true & npm run js -- -w -s",
+    "start": "npm run build && npm run css -- -w --source-map true & npm run js -- -w -s",
     "build": "rm -rf dist && npm run css && npm run js",
     "css": "node-sass src -o dist --output-style compressed",
     "js": "babel src -d dist --compact=true --presets=env --no-comments"

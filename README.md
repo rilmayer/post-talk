@@ -1,10 +1,11 @@
-# LINE POST
+# <img src="https://github.com/rilmayer/post-talk/blob/master/design/logo.svg" width="320px">
+ぽすとーくはLINE BOTによる手紙を用いたコミュニケーション支援のアプリです。
 
-TODO: **LINE POST** の説明を書く
+## 概要
+LINE Messaging APIを用いています。
 
-## Documentation
-
-[こちら](https://github.com/rilmayer/line-post/tree/master/docs)
+## システム構成
+![system](https://github.com/rilmayer/post-talk/blob/master/docs/images/POST_TALK.png)
 
 ## ファイル構成
 

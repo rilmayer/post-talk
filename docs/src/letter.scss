@@ -1,0 +1,128 @@
+@charset "utf-8";
+@import "normalize";
+@font-face {
+  font-family: "PenjiKoibumi";
+  src: url("../images/BGPENKB.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Noto Serif JP Bold";
+  src: url("../images/NotoSerifJP-Bold.otf") format("opentype");
+}
+@font-face {
+  font-family: "Robot Mono";
+  src: url("../images/RobotoMono-Bold.ttf") format("truetype");
+}
+
+$COLOR_POST: #c00;
+
+html{
+  background: #000;
+}
+
+#letter{
+
+  width: 257mm;
+  height: 182mm;
+  background-size: 100%;
+
+  &.back{
+    background-image: url(../images/letter-back.jpg);
+  }
+  &.front{
+    background-image: url(../images/letter-front.jpg);
+  }
+
+  >*{
+    height: 100%;
+    width: 50%;
+    float: left;
+    margin: 0;
+  }
+
+  &.back .left{
+    box-sizing: border-box;
+    padding: 25mm 8mm 0;
+    font-family: "PenjiKoibumi", sans-serif;
+    font-size: 5.2mm;
+    line-height: 9mm;
+    color: #320;
+    p{
+      text-indent: 1em;
+      margin: 0;
+    }
+  }
+
+  .right{
+    position: relative;
+    >*{
+      margin: 0;
+      position: absolute;
+      writing-mode: vertical-rl;
+      font-family: "Noto Serif JP Bold", serif;
+    }
+    .s-zip, .r-zip{
+      writing-mode: initial;
+      font-family: "Robot Mono", monospace;
+      span{
+        display: inline-block;
+        width: .3em;
+        height: 1mm;
+      }
+    }
+    .s-zip{
+      height: 10mm;
+      line-height: 10mm;
+      left: 62.5mm;
+      top: 10mm;
+      font-size: 6mm;
+      letter-spacing: 4.1mm;
+      text-indent: 1.8mm;
+    }
+    .s-add{
+      height: 130mm;
+      line-height: 1.7;
+      top: 34mm;
+      right: 12mm;
+      font-size: 8mm;
+    }
+    .s-name{
+      top: 34mm;
+      left: calc(50% - 8mm);
+      width: 16mm;
+      line-height: 16mm;
+      font-size: 12mm;
+      letter-spacing: .2em;
+      span{
+        font-size: .8em;
+        display: inline-block;
+        margin-top: .8em;
+      }
+    }
+    .r-zip{
+      height: 8mm;
+      line-height: 8mm;
+      left: 10mm;
+      top: 164mm;
+      letter-spacing: 3.2mm;
+      text-indent: 1.3mm;
+    }
+    .r-add{
+      bottom: 22mm;
+      left: 24mm;
+      // width: 10mm;
+      font-size: 6mm;
+      height: 90mm;
+      line-height: 1.5;
+    }
+    .r-name{
+      bottom: 22mm;
+      left: 10mm;
+      width: 10mm;
+      max-height: 120mm;
+      line-height: 10mm;
+      font-size: 8mm;
+      letter-spacing: .2em;
+    }
+  }
+
+}
