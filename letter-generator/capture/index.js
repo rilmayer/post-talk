@@ -29,18 +29,6 @@ exports.handler = async (event, context, callback) => {
         await page.goto(url, {
             waitUntil: 'domcontentloaded'
         });
-        // await page.evaluate(() => {
-        //     var style = document.createElement('style');
-        //     style.textContent = `
-        //         @import url('//fonts.googleapis.com/css?family=Source+Code+Pro');
-        //         @import url('//fonts.googleapis.com/earlyaccess/notosansjp.css');`;
-        //     document.head.appendChild(style);
-        //     document.body.style.fontFamily = "'Noto Sans JP', sans-serif";
-
-        //     document.querySelectorAll('pre > code').forEach((el, idx) => {
-        //         el.style.fontFamily = "'Source Code Pro', 'Noto Sans JP', monospace";
-        //     });
-        // });
         const pdfBuf = await page.pdf({
             printBackground: true
         });
