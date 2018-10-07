@@ -3,8 +3,12 @@ const launchChrome = require('@serverless-chrome/lambda');
 const CDP = require('chrome-remote-interface');
 const puppeteer = require('puppeteer');
 const uuidv1 = require('uuid/v1');
+const child_process = require('child_process');
+const fs = require('fs');
 
 const SAVE_BUCKET_NAME = 'postalk.dev';
+process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'] + '/bin';
+process.env['LD_LIBRARY_PATH'] = process.env['LAMBDA_TASK_ROOT'] + '/bin';
 
 exports.handler = async (event, context, callback) => {
     let slsChrome = null;
@@ -30,6 +34,7 @@ exports.handler = async (event, context, callback) => {
             waitUntil: 'domcontentloaded'
         });
         const pdfBuf = await page.pdf({
+            path: "/tmp/front.pdf",
             printBackground: true
         });
 
@@ -43,31 +48,27 @@ exports.handler = async (event, context, callback) => {
                 waitUntil: 'domcontentloaded'
             });
         const pdfBuf2 = await page.pdf({
+            path: "/tmp/back.pdf",
             printBackground: true
         });
 
+        const outputFileName = '/tmp/output.pdf';
+        child_process.execSync('pdftk /tmp/front.pdf /tmp/back.pdf output ' + outputFileName);
+        const output = fs.readFileSync(outputFileName);
         const s3 = new AWS.S3();
         const fileName = "postalk-" + uuidv1() + '.pdf';
         await s3.putObject({
             ACL: "public-read",
             Bucket: SAVE_BUCKET_NAME,
             Key: fileName,
-            Body: pdfBuf
-        }).promise();
-        const fileName2 = "postalk-" + uuidv1() + '.pdf';
-        await s3.putObject({
-            ACL: "public-read",
-            Bucket: SAVE_BUCKET_NAME,
-            Key: fileName2,
-            Body: pdfBuf2
+            Body: output
         }).promise();
 
         return callback(null, {
             "statusCode": 200,
             "body": JSON.stringify({
                 result: 'OK',
-                front: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + "/" + fileName,
-                back: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + "/" + fileName2
+                link: "https://s3.amazonaws.com/" + SAVE_BUCKET_NAME + "/" + fileName,
             }),
             "isBase64Encoded": false
         });
