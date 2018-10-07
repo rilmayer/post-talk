@@ -40,7 +40,7 @@ sh upload.sh
 
 ### テスト（デプロイ後）
 ```
-curl hogehoge.com -X POST -d '{"from_local_curl": True, "events":[{"replyToken":"hogehoge","message": {"type": "text", "text": "こんにちは"}}]}"
+curl https://kxnyf4pbgk.execute-api.ap-northeast-1.amazonaws.com/prod/line-post/ -X POST -d '{"from_local_curl": "true", "events":[{"replyToken":"hogehoge", "source": {"userId": "local_user"}, "message": {"type": "text", "text": "こんにちは"}}]}'
 ```
 
 ### Lambdaのコンソール画面で設定（WIP）
