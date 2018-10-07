@@ -8,5 +8,7 @@ LINE Messaging APIを用いています。
 ![system](https://github.com/rilmayer/post-talk/blob/master/docs/images/POST_TALK.png)
 
 ## ファイル構成
+
 - `/line-bot` ... LINE Messaging APIを使ってやりとりを行う
+- `/letter-generator` ... line-bot によって得られたデータを元に手紙画像を生成する
 - `/papirs-api` ... PAPIRS APIを利用して手紙を送るためのコード群
