@@ -6,17 +6,41 @@ GET パラメータをセットしてアクセスすると手紙風の画面を�
 
 [ソースコードはこちら](https://github.com/dulltz/postalk-letter)。
 
-指定する GET パラメータ。すべて必須
+- Requirements
 
-| Name                 | Type   | Description                       |
-| -------------------- | ------ | --------------------------------- |
-| sender_name          | string | 送信者の名前                      |
-| sender_postal_code   | string | 受診者の郵便番号 7 桁ハイフンなし |
-| sender_address       | string | 送信者の住所                      |
-| receiver_name        | string | 受信者の名前                      |
-| receiver_postal_code | string | 受信者の郵便番号 7 桁ハイフンなし |
-| receiver_address     | string | 受信者の住所                      |
-| message              | string | 手紙の本文。`\n`で改行            |
+  - Ruby 2.4
+
+### Endpoints
+
+- `/letter_front`
+
+  指定する GET パラメータ。すべて必須
+
+  | Name                 | Type   | Description                       |
+  | -------------------- | ------ | --------------------------------- |
+  | sender_name          | string | 送信者の名前                      |
+  | sender_postal_code   | string | 受診者の郵便番号 7 桁ハイフンなし |
+  | sender_address       | string | 送信者の住所                      |
+  | receiver_name        | string | 受信者の名前                      |
+  | receiver_postal_code | string | 受信者の郵便番号 7 桁ハイフンなし |
+  | receiver_address     | string | 受信者の住所                      |
+  | message              | string | 手紙の本文。`\n`で改行            |
+
+- `/letter_back`
+
+  指定する GET パラメータ。すべて必須
+
+  | Name                 | Type   | Description                       |
+  | -------------------- | ------ | --------------------------------- |
+  | sender_name          | string | 送信者の名前                      |
+  | sender_postal_code   | string | 受診者の郵便番号 7 桁ハイフンなし |
+  | sender_address       | string | 送信者の住所                      |
+  | receiver_name        | string | 受信者の名前                      |
+  | receiver_postal_code | string | 受信者の郵便番号 7 桁ハイフンなし |
+  | receiver_address     | string | 受信者の住所                      |
+  | message              | string | 手紙の本文。`\n`で改行            |
+
+---
 
 ## `capture`
 
@@ -24,7 +48,11 @@ GET パラメータをセットしてアクセスすると手紙風の画面を�
 
 API Gateway を用いて Web API として利用することを前提とする。
 
-### 例
+- Requirements
+
+  - Node.js v8.10
+
+### Example
 
 Request body
 
@@ -47,10 +75,10 @@ Request body
 Response body
 
 - `result` ... OK または ERROR
-- `pdf` ... letter_front と letter_back の出力を2ページのPDFにしたファイルのURL
-- `jpeg` ... letter_front の JPEG スクリーンショットのURL
-- `thumbnail` ... `jpeg` を幅100pxにリサイズした画像のURL
-- `preview` ... `jpeg` を幅500pxにリサイズした画像のURL
+- `pdf` ... letter_front と letter_back の出力を 2 ページの PDF にしたファイルの URL
+- `jpeg` ... letter_front の JPEG スクリーンショットの URL
+- `thumbnail` ... `jpeg` を幅 100px にリサイズした画像の URL
+- `preview` ... `jpeg` を幅 500px にリサイズした画像の URL
 
 ```json
 {
@@ -62,7 +90,13 @@ Response body
 }
 ```
 
+---
+
 ## `resize`
+
+- Requirements
+
+  - Node.js v8.10
 
 `capture` が S3 にアップロードした JPEG をリサイズして再アップロードする lambda 関数。
 
