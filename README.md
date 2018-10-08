@@ -3,6 +3,7 @@
 </h1>
 
 ぽすとーくは LINE で手紙を送れるコミュニケーション支援アプリです。
+サービス概要は[こちら](https://rilmayer.github.io/post-talk/)。
 
 ## システム概要
 
