@@ -70,8 +70,7 @@ class LinePay(object):
         else:
             transaction_info = response['Item']['transaction_data']
 
-
-        url = '{}{}{}'.format(self.DEFAULT_ENDPOINT, self.VERSION, '/{}/confirm'.format(transaction_id))
+        url = self.DEFAULT_ENDPOINT + "/v2/payments/" + transaction_id + "/confirm"
         data = {
                 'amount':transaction_info['amount'],
                 'currency':transaction_info['currency'],
@@ -80,7 +79,7 @@ class LinePay(object):
                    'X-LINE-ChannelId':self.channel_id,
                    'X-LINE-ChannelSecret':self.channel_secret}
         response = requests.post(url, headers=headers, data=json.dumps(data).encode("utf-8"))
-        return response
+        return response.text
 
 if __name__ == '__main__':
     pay = LinePay(LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY, LINEPAY_CALL_BACK_URL)
@@ -90,7 +89,7 @@ if __name__ == '__main__':
     #         'order_id':'0001'
     #         }
     # transaction_info = pay.reserve(**data)
-    transaction_id = '2018100800035687510'
+    transaction_id = ''
     transaction_info = pay.confirm(transaction_id)
     print(transaction_info)
 
