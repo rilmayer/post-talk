@@ -1,12 +1,10 @@
-<img src="https://github.com/rilmayer/post-talk/blob/master/design/logo.svg" width="320px">
+# <img src="https://github.com/rilmayer/post-talk/blob/master/design/logo.svg" width="420px">
 
 ぽすとーくは LINE で手紙を送れるコミュニケーション支援アプリです。
 
 ## システム概要
 
-LINE Messaging API を用いて AWS 上にそれらをハンドリングするシステム群を構築しています。
-
-ポストークのバックエンドは大きく分けると以下のサブシステムからなります。
+ポストークのバックエンドは以下のサブシステムからなります。
 
 - メッセージハンドリング
 - 手紙デザイン生成
@@ -22,26 +20,26 @@ LINE Messaging API を用いて AWS 上にそれらをハンドリングする�
 
 各種 LINE API を実行しながらユーザーとのインタラクションを行うサブシステム。
 
-AWS Lambda と DynamoDB から構成される。
+AWS Lambda と DynamoDB から構成されます。
 
-メッセージング経由で必要なデータを収集し、逐次 DynamoDB に格納する。
+メッセージング経由で必要なデータを収集し、逐次 DynamoDB に格納します。
 
-状態は DynamoDB に切り出し、ロジック自体はステートレスに実装している。
+状態は DynamoDB に切り出し、ロジック自体はステートレスに実装しています。
 
 ### 手紙デザイン生成 `letter-generator`
 
 メッセージハンドリングが収集したデータをもとに、手紙画像を生成するサブシステム。
 
-以下のシステムから構成される。
+以下のシステムから構成されます。
 
 - [`letter page`](https://github.com/dulltz/postalk-letter)
 
-  GET パラメータをセットしてアクセスすると手紙風の画面を表示するウェブサイト。  
+  GET パラメータをセットしてアクセスすると手紙風の画面を表示するウェブサイト。
 
 - `capture`
 
-  [`letter page`](https://github.com/dulltz/postalk-letter) のキャプチャを撮影、s3 にアップロードする。
-  Letter 両面をキャプチャして一つの PDF ファイルにしたものと、表面のキャプチャ(jpeg)をアップロードする。
+  [`letter page`](https://github.com/dulltz/postalk-letter) のキャプチャを撮影、S3 にアップロードします。
+
 - `resize`
 
-  `capture` が jpg 画像を s3 にアップロードしたことをフックに、その画像をリサイズして s3 にアップロードする。幅 1000px ,幅 200px の jpg 画像を作成する。
+  `capture` が jpg 画像を S3 にアップロードしたことをフックに、その画像をリサイズして s3 にアップロードします。幅 1000px ,幅 200px の jpg 画像を作成します。
