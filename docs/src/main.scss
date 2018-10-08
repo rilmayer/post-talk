@@ -14,9 +14,6 @@ html{
 }
 
 body{
-  background-image: url(../images/bg.jpg);
-  background-attachment: fixed;
-  background-size: cover;
   color: rgba($color-main,.7);
   font: 1.6rem/1.8 'Sawarabi Mincho', sans-serif;
   font-feature-settings : "pwid";
@@ -30,6 +27,9 @@ a{
 }
 
 .cta{
+  @media print{
+    display: none;
+  }
   font-family: "Hiragino Kaku Gothic Pro","ヒラギノ角ゴ Pro W3","メイリオ","Meiryo","ＭＳ Ｐゴシック","Helvetica Neue","Helvetica","Arial",sans-serif;
   letter-spacing: .1em;
   text-indent: 2.8em;
@@ -66,12 +66,22 @@ a{
   100% { opacity: 0 }
 }
 header{
+  background-image: url(../images/bg.jpg);
+  background-attachment: fixed;
+  background-size: cover;
   position: relative;
   box-sizing: border-box;
   width: 100vw;
   height: 100vh;
   text-align: center;
   padding-top:  25vh;
+  @media print{
+    width: 100%;
+    height: 100vh;
+    background-size: auto 100%;
+    background-position: center;
+    background-attachment: initial;
+  }
   .logo{
     width: 40rem;
     position: absolute;
@@ -84,6 +94,9 @@ header{
     }
   }
   .splash{
+    @media print{
+      display: none;
+    }
     position: absolute;
     z-index: 900;
     top: 0;
@@ -139,6 +152,10 @@ header{
 }
 
 section{
+  @media print{
+    height: 100vh;
+    box-sizing: border-box;
+  }
   background-image: url(../images/paper.png);
   background-size: 144px;
   padding: 10rem calc(50% - 600px);
@@ -252,6 +269,11 @@ section{
       width: calc(100% - 4rem);
     }
   }
+  &#lead{
+    @media print{
+      display: none;
+    }
+  }
 }
 
 footer{
@@ -289,5 +311,18 @@ footer{
   small{
     display: block;
     margin: 4rem auto 0;
+  }
+  @media print{
+    box-sizing: border-box;
+    height: 100vh;
+    padding-top: 30vh;
+  }
+}
+
+.print{
+  display: none;
+  @media print{
+    display: initial;
+    text-indent: 0 !important;
   }
 }
