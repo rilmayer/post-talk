@@ -84,7 +84,7 @@ def lambda_handler(event, context):
     transaction_info = pay.confirm(transaction_id)
     logger.info('transaction_info {}'.format(str(transaction_info)))
 
-    text = 'LINE PAYによ決済が完了しました。'
+    text = 'LINE PAYによる決済が完了しました。'
     payload['messages'].append(generate_linepay_button_template())
     logger.info('payload {}'.format(str(payload)))
 

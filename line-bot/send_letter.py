@@ -1,10 +1,16 @@
 import datetime
 import logging
 from linepay import LinePay
+import json
+import sys
 import os
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+sys.path.append('./site-packages')
+
+import requests
 
 LINEPAY_CHANNEL_ID = os.environ["LINEPAY_ID"]
 LINEPAY_CHANNEL_SECRET_KEY = os.environ["LINEPAY_SECRET_KEY"]
@@ -27,7 +33,7 @@ def generate_linepay_button_template(url):
         "template": {
             "type": "buttons",
             "title": "LINE PAY",
-              "text": "LINE PAYによる決済",
+              "text": "LINE PAYによる決済（デモアプリなので実際の決済は行われませんが、先着10名様は実際にサービスを提供します。）",
               "actions": [
                   {
                     "type": "uri",
@@ -226,10 +232,12 @@ def initialize_letter_info(user_item, message_text, reply_token):
         reply_message = generate_linepay_button_template(url)
         #reply_message = generate_text_template(url)
         reply_messages.append(reply_message)
+        text = '決済が完了しましたら「確認」と入力してください。'
+        reply_messages.append(generate_text_template(text))
 
     # 送信のチェック
     elif current_user_stage == 106:
-        if message_text == 'はい':
+        if message_text == '確認':
             next_user_stage = current_user_stage + 1
 
             letter_messages = [m for m in user_item['tmp_letter_transaction']['messages'] if m != ""]
@@ -279,23 +287,27 @@ def initialize_letter_info(user_item, message_text, reply_token):
 
     user_item['user_stage'] = next_user_stage
 
-
     return user_item, reply_messages
-
 
 
 # 手紙画像生成APIへのポスト
 def post_lettter_image_generate_api(user_item):
+    GENERATE_API_ENDPOINT = os.environ["GENERATE_API_ENDPOINT"]
     POST_JSON = {
-                   "sender_name": "",
-                   "sender_postal_code": "",
-                   "sender_address": "",
-                   "receiver_name": "",
-                   "receiver_postal_code": "",
-                   "receiver_address": "",
-                   "message": ["message1", "message2", "message3"]
+                   "sender_name": user_item["name"],
+                   "sender_postal_code": user_item['postal_code'],
+                   "sender_address": user_item['address'],
+                   "receiver_name": user_item['receiver_name'],
+                   "receiver_postal_code": user_item['receiver_postal_code'],
+                   "receiver_address": user_item['receiver_address'],
+                   "message": user_item['tmp_letter_transaction']['messages']
                 }
-    urls = {"preview_url": "https://lh4.googleusercontent.com/OwJpL_s1hfEisVv6BUiuJcnE3cKJS7PYJ838lLrRNJsAXTuTZ1JZtq4YC6i70zrS_wDwUyrTP_sQytY5y5Ln=w947-h641", "original_url": "https://lh4.googleusercontent.com/VLeoKx_Q4mmMwuzXTisNL3e9YTorygpMJkBETyh0L_DOzmsr-0EpzO3ydoffi2P4ZeNomZQt9mevzv_5Jbha=w1440-h803-rw", "pdf_url":"hogehoge.com"}
+
+    response = requests.post(GENERATE_API_ENDPOINT, headers={'content-type': 'application/json'}, data=json.dumps(POST_JSON))
+    urls = {}
+    urls["preview_url"] = json.loads(response.text)["thumbnail"]
+    urls["original_url"] = json.loads(response.text)["jpeg"]
+    urls["pdf_url"] = json.loads(response.text)["pdf"]
     return urls
 
 
