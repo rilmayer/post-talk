@@ -1,4 +1,6 @@
-# <img src="https://github.com/rilmayer/post-talk/blob/master/design/logo.svg" width="420px">
+<h1>
+  <a href="https://rilmayer.github.io/post-talk"><img src="https://github.com/rilmayer/post-talk/blob/master/design/cover.png" alt="ぽすとーく"></a>
+</h1>
 
 ぽすとーくは LINE で手紙を送れるコミュニケーション支援アプリです。
 
@@ -43,3 +45,5 @@ AWS Lambda と DynamoDB から構成されます。
 - `resize`
 
   `capture` が jpg 画像を S3 にアップロードしたことをフックに、その画像をリサイズして s3 にアップロードします。幅 1000px ,幅 200px の jpg 画像を作成します。
+
+仕様はこちら [spec.md](spec.md)
