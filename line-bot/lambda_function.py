@@ -19,6 +19,11 @@ logger.setLevel(logging.INFO)
 # Dynamoテーブル
 DYNAMO_TABLE_NAME = os.environ['DYNAMO_TABLE_NAME']
 
+# LINEPAY
+LINEPAY_CHANNEL_ID = os.environ["LINEPAY_ID"]
+LINEPAY_CHANNEL_SECRET_KEY = os.environ["LINEPAY_SECRET_KEY"]
+LINEPAY_CALL_BACK_URL = os.environ["LINEPAY_CALL_BACK_URL"]
+
 # LINE用 メッセージテンプレート生成関数
 # テキストメッセージテンプレートの生成
 def generate_text_template(text):
@@ -61,7 +66,6 @@ def get_user_item(user_id):
 
     # 過去に登録のあったユーザーはデータ取得
     response = table.get_item( Key={'user_id': user_id} )
-    logger.info('user_initial_setting get {}'.format(response))
 
     if response.get('Item') is None:
         return None
@@ -258,6 +262,7 @@ def lambda_handler(event, context):
     # Dynamo table
     dynamodb = boto3.resource('dynamodb')
     table    = dynamodb.Table(DYNAMO_TABLE_NAME)
+    logger.info('Dynamo connected.')
 
 
     # LINEリプライの内容
@@ -276,6 +281,7 @@ def lambda_handler(event, context):
 
         # ユーザーの状態を取得
         user_item = get_user_item(user_id)
+        logger.info('user_item got.')
 
         if message['type'] == 'image':
             #message_id = message['id']
@@ -307,9 +313,9 @@ def lambda_handler(event, context):
                     current_user_stage = save_initial_settings(user_item, message_text)
                     reply_message = initial_setting_message(current_user_stage, user_item, message_text)
 
-                # 手紙作成時は「user_stage」変数が100〜109
-                elif user_stage >= 100 and user_stage < 107:
-                    user_item, reply_messages = initialize_letter_info(user_item, message_text)
+                # 手紙作成時は「user_stage」変数が100〜107
+                elif user_stage >= 100 and user_stage < 108:
+                    user_item, reply_messages = initialize_letter_info(user_item, message_text, event['replyToken'])
 
                     response = table.put_item(Item=user_item)
                     logger.info('Dynamo save: {}'.format(response))
