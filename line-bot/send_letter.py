@@ -1,4 +1,21 @@
 import datetime
+import logging
+from linepay import LinePay
+import json
+import sys
+import os
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+sys.path.append('./site-packages')
+
+import requests
+
+LINEPAY_CHANNEL_ID = os.environ["LINEPAY_ID"]
+LINEPAY_CHANNEL_SECRET_KEY = os.environ["LINEPAY_SECRET_KEY"]
+DYNAMO_TABLE_LINEPAY_NAME = os.environ['DYNAMO_TABLE_LINEPAY_NAME']
+LINEPAY_CALL_BACK_URL = os.environ['LINEPAY_CALL_BACK_URL']
 
 # テキストメッセージテンプレートの生成
 def generate_text_template(text):
@@ -7,6 +24,26 @@ def generate_text_template(text):
                     'text': text
                     }
     return TEXT_TEMPLATE
+
+# ボタンメッセージテンプレートの生成
+def generate_linepay_button_template(url):
+    BUTTON_TEMPLATE = {
+        "type": "template",
+        "altText": "LINE PAYによる決済: " + url,
+        "template": {
+            "type": "buttons",
+            "title": "LINE PAY",
+              "text": "LINE PAYによる決済（デモアプリなので実際の決済は行われませんが、先着10名様は実際にサービスを提供します。）",
+              "actions": [
+                  {
+                    "type": "uri",
+                    "label": "決済画面に移動",
+                    "uri": url
+                  }
+              ]
+          }
+        }
+    return BUTTON_TEMPLATE
 
 # 確認テンプレートの生成
 def generate_confirm_template(text):
@@ -62,7 +99,7 @@ def generate_letter_transaction(messages, urls):
 # 手紙情報についていろいろ設定して、返事となるメッセージを生成する
 # 引数: user_item（Dynamoから取得したカラム）
 # 返り値: user_item(dict object), 返事(str)
-def initialize_letter_info(user_item, message_text):
+def initialize_letter_info(user_item, message_text, reply_token):
     STAGE_MASTER = {
       100: 'initialize_letter_info',
       101: 'message1',
@@ -168,7 +205,7 @@ def initialize_letter_info(user_item, message_text):
             reply_messages.append(reply_message)
         else:
             # [TODO] 「はい」か「いいえ」で答えてください的なものをしたい
-            next_user_stage = 13
+            next_user_stage = current_user_stage + 1
 
             # tmp 情報を削除
             user_item['tmp_letter_transaction']['messages'] = []
@@ -178,9 +215,29 @@ def initialize_letter_info(user_item, message_text):
             reply_message = generate_text_template(reply_text)
             reply_messages.append(reply_message)
 
-    # 送信のチェック
+    # LINE PAY
     elif current_user_stage == 105:
-        if message_text == 'はい':
+        next_user_stage = current_user_stage + 1
+        data = {
+            "product_name": "ぽすとーく 手紙送信",
+            'amount': '300',
+            'currency': 'JPY',
+            'order_id': user_item['user_id'] + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'reply_token': reply_token
+            }
+        pay = LinePay(LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY, LINEPAY_CALL_BACK_URL)
+        url = pay.reserve(**data)
+
+        # メッセージの生成
+        reply_message = generate_linepay_button_template(url)
+        #reply_message = generate_text_template(url)
+        reply_messages.append(reply_message)
+        text = '決済が完了しましたら「確認」と入力してください。'
+        reply_messages.append(generate_text_template(text))
+
+    # 送信のチェック
+    elif current_user_stage == 106:
+        if message_text == '確認':
             next_user_stage = current_user_stage + 1
 
             letter_messages = [m for m in user_item['tmp_letter_transaction']['messages'] if m != ""]
@@ -223,30 +280,34 @@ def initialize_letter_info(user_item, message_text):
             reply_messages.append(reply_message)
 
     # 送信のチェック
-    elif current_user_stage == 106:
+    elif current_user_stage == 107:
         next_user_stage = 13
         reply_text = "設定は完了しています。何か変更したいですか？\n設定を確認したい場合は「設定」、設定を変更したい場合は「変更」と入力してください。"
         reply_message = generate_text_template(reply_text)
 
     user_item['user_stage'] = next_user_stage
 
-
     return user_item, reply_messages
-
 
 
 # 手紙画像生成APIへのポスト
 def post_lettter_image_generate_api(user_item):
+    GENERATE_API_ENDPOINT = os.environ["GENERATE_API_ENDPOINT"]
     POST_JSON = {
-                   "sender_name": "",
-                   "sender_postal_code": "",
-                   "sender_address": "",
-                   "receiver_name": "",
-                   "receiver_postal_code": "",
-                   "receiver_address": "",
-                   "message": ["message1", "message2", "message3"]
+                   "sender_name": user_item["name"],
+                   "sender_postal_code": user_item['postal_code'],
+                   "sender_address": user_item['address'],
+                   "receiver_name": user_item['receiver_name'],
+                   "receiver_postal_code": user_item['receiver_postal_code'],
+                   "receiver_address": user_item['receiver_address'],
+                   "message": user_item['tmp_letter_transaction']['messages']
                 }
-    urls = {"preview_url": "https://lh4.googleusercontent.com/OwJpL_s1hfEisVv6BUiuJcnE3cKJS7PYJ838lLrRNJsAXTuTZ1JZtq4YC6i70zrS_wDwUyrTP_sQytY5y5Ln=w947-h641", "original_url": "https://lh4.googleusercontent.com/VLeoKx_Q4mmMwuzXTisNL3e9YTorygpMJkBETyh0L_DOzmsr-0EpzO3ydoffi2P4ZeNomZQt9mevzv_5Jbha=w1440-h803-rw", "pdf_url":"hogehoge.com"}
+
+    response = requests.post(GENERATE_API_ENDPOINT, headers={'content-type': 'application/json'}, data=json.dumps(POST_JSON))
+    urls = {}
+    urls["preview_url"] = json.loads(response.text)["thumbnail"]
+    urls["original_url"] = json.loads(response.text)["jpeg"]
+    urls["pdf_url"] = json.loads(response.text)["pdf"]
     return urls
 
 

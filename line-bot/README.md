@@ -41,7 +41,7 @@ sh upload.sh
 
 ### テスト（デプロイ後）
 ```
-curl hoge.com -X POST -d '{"from_local_curl": "true", "events":[{"replyToken":"hogehoge", "source": {"userId": "local_user"}, "message": {"type": "text", "text": "こんにちは"}}]}'
+curl hoge.com -X POST -d '{"from_local_curl": "true", "events":[{"replyToken":"hogehoge", "source": {"userId": "local_user"}, "message": {"type": "text", "text": "手紙を送る"}}]}'
 ```
 
 ### Lambdaのコンソール画面で設定（WIP）
