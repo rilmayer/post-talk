@@ -32,18 +32,6 @@ AWS Lambda と DynamoDB から構成されます。
 
 メッセージハンドリングが収集したデータをもとに、手紙画像を生成するサブシステム。
 
-以下のシステムから構成されます。
+AWS Lambda 関数と web サービスから構成されます。
 
-- [`letter page`](https://github.com/dulltz/postalk-letter)
-
-  GET パラメータをセットしてアクセスすると手紙風の画面を表示するウェブサイト。
-
-- `capture`
-
-  [`letter page`](https://github.com/dulltz/postalk-letter) のキャプチャを撮影、S3 にアップロードします。
-
-- `resize`
-
-  `capture` が jpg 画像を S3 にアップロードしたことをフックに、その画像をリサイズして s3 にアップロードします。幅 1000px ,幅 200px の jpg 画像を作成します。
-
-仕様はこちら [spec.md](spec.md)
+仕様はこちら [letter-generator/README.md](letter-generator/README.md)
