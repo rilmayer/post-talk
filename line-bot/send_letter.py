@@ -217,23 +217,34 @@ def initialize_letter_info(user_item, message_text, reply_token):
 
     # LINE PAY
     elif current_user_stage == 105:
-        next_user_stage = current_user_stage + 1
-        data = {
-            "product_name": "ぽすとーく 手紙送信",
-            'amount': '300',
-            'currency': 'JPY',
-            'order_id': user_item['user_id'] + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'reply_token': reply_token
-            }
-        pay = LinePay(LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY, LINEPAY_CALL_BACK_URL)
-        url = pay.reserve(**data)
+        if message_text == 'はい':
+            next_user_stage = current_user_stage + 1
+            data = {
+                "product_name": "ぽすとーく 手紙送信",
+                'amount': '300',
+                'currency': 'JPY',
+                'order_id': user_item['user_id'] + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'reply_token': reply_token
+                }
+            pay = LinePay(LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY, LINEPAY_CALL_BACK_URL)
+            url = pay.reserve(**data)
 
-        # メッセージの生成
-        reply_message = generate_linepay_button_template(url)
-        #reply_message = generate_text_template(url)
-        reply_messages.append(reply_message)
-        text = '決済が完了しましたら「確認」と入力してください。'
-        reply_messages.append(generate_text_template(text))
+            # メッセージの生成
+            reply_message = generate_linepay_button_template(url)
+            #reply_message = generate_text_template(url)
+            reply_messages.append(reply_message)
+            text = '決済が完了しましたら「確認」と入力してください。'
+            reply_messages.append(generate_text_template(text))
+        else:
+            next_user_stage = 13
+
+            # tmp 情報を削除
+            user_item['tmp_letter_transaction']['messages'] = []
+            user_item['tmp_letter_transaction']['urls'] = {}
+
+            reply_text = "手紙作成を取り消しました。"
+            reply_message = generate_text_template(reply_text)
+            reply_messages.append(reply_message)
 
     # 送信のチェック
     elif current_user_stage == 106:
