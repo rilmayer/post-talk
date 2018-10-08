@@ -92,8 +92,11 @@ header{
     height: 100%;
     background-image: url(../images/paper.png);
     background-size: 144px;
-    animation: splash 1s ease 2s forwards;
     pointer-events: none;
+    animation: splash 1s ease 2s forwards;
+    @media (max-width: 480px){
+      animation: splash .5s ease .5s forwards;
+    }
   }
   p{
     color: rgba($color-main,.4);
@@ -139,8 +142,8 @@ section{
   background-image: url(../images/paper.png);
   background-size: 144px;
   padding: 10rem calc(50% - 600px);
-  @media (max-width: 1264px){
-    padding: 8rem 32px;
+  @media (max-width: 1296px){
+    padding: 8rem 48px;
   }
   @media (max-width: 480px){
     padding: 6rem 16px;
@@ -163,6 +166,12 @@ section{
     letter-spacing: .1em;
     opacity: .8;
     margin: 0;
+    br{
+      display: none;
+      @media (max-width: 480px){
+        display: inline;
+      }
+    }
   }
   &#what{
     overflow: auto;
@@ -170,6 +179,7 @@ section{
       float: right;
       margin-top: 2rem;
       width: 40rem;
+      border-radius: 4px;
       @media (max-width: 768px){
         float: none;
         width: 70%;
@@ -199,20 +209,47 @@ section{
       padding: .1em 0 0;
     }
   }
-  &#howto{
-    ol{
-      // counter-reset:カウンタ名;
-      // list-style: none;
-    }
-    // li:before {
-    //   counter-increment: カウンタ名; /* 任意の名前を付ける（もちろん英語で） */
-    //   content: counter(カウンタ名); /* 名前を付けたカウンターをcontentで発動！ */
-    // }
-  }
   &#system{
     img{
       width: 100%;
       margin-top: 2rem;
+      border-radius: 4px;
+    }
+    em{
+      font-style: normal;
+      font-weight: bold;
+    }
+  }
+  &#howto{
+    ol{
+      counter-reset: howto;
+      list-style: none;
+      padding: 0;
+      margin-top: 3rem;
+    }
+    li{
+      margin-top: 2rem;
+      &:before {
+        display: inline-block;
+        counter-increment: howto;
+        content: counter(howto);
+        font-family: 'Times New Roman', Times, serif;
+        color: rgba(#fff,.6);
+        font-weight: bold;
+        font-size: 1.4em;
+        width: 2.4rem;
+        height: 2.4rem;
+        line-height: 2.4rem;
+        text-align: center;
+        background: $color-acce;
+        vertical-align: top;
+        margin-right: .4rem;
+       }
+    }
+    p{
+      margin: 0;
+      display: inline-block;
+      width: calc(100% - 4rem);
     }
   }
 }
@@ -233,6 +270,12 @@ footer{
   }
   a{
     color: #fff;
+  }
+  br{
+    display: none;
+    @media (max-width: 480px){
+      display: inline;
+    }
   }
   ul{
     list-style: none;
