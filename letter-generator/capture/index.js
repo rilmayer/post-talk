@@ -17,7 +17,7 @@ exports.handler = async (event, context, callback) => {
 
     try {
         const data = JSON.parse(event.body);
-        const urlParams = "?message=" + data.message.join('\n') +
+        const urlParams = "?message=" + data.message.join('%5Cn') +
             "&sender_name=" + data.sender_name +
             "&sender_address=" + data.sender_address +
             "&sender_postal_code=" + data.sender_postal_code +
@@ -42,17 +42,6 @@ exports.handler = async (event, context, callback) => {
         });
 
         const fileName = "postalk-" + uuidv1();
-        const jpegBuf = await page.screenshot({
-            type: "jpeg",
-            fullPage: true
-        });
-        const s3 = new AWS.S3();
-        await s3.putObject({
-            ACL: "public-read",
-            Bucket: SAVE_BUCKET_NAME,
-            Key: fileName + ".jpeg",
-            Body: jpegBuf
-        }).promise();
 
         await page.goto('https://postalk-letter-dev.herokuapp.com/letter_back' + urlParams, {
             waitUntil: 'domcontentloaded'
@@ -64,6 +53,18 @@ exports.handler = async (event, context, callback) => {
             height: '176mm',
             printBackground: true
         });
+
+        const jpegBuf = await page.screenshot({
+            type: "jpeg",
+            fullPage: true
+        });
+        const s3 = new AWS.S3();
+        await s3.putObject({
+            ACL: "public-read",
+            Bucket: SAVE_BUCKET_NAME,
+            Key: fileName + ".jpeg",
+            Body: jpegBuf
+        }).promise();
 
         const outputFileName = '/tmp/output.pdf';
         child_process.execSync('pdftk A=/tmp/front.pdf B=/tmp/back.pdf cat A1 B1 output ' + outputFileName);
