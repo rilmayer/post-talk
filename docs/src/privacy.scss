@@ -1,0 +1,65 @@
+@charset "utf-8";
+@import "normalize";
+@import url('https://fonts.googleapis.com/css?family=Sawarabi+Mincho');
+
+$color-base: #fafafa;
+$color-main: #210;
+$color-acce: #C90;
+
+html{
+  background: $color-acce;
+  font-size: 10px;
+  @media (max-width: 480px){ font-size: 8.75px }
+}
+
+body{
+  background-image: url(../images/paper.png);
+  background-size: 144px;
+  padding: 10rem calc(50% - 25em);
+  @media (max-width: 960px){
+    padding: 8rem 48px;
+  }
+  @media (max-width: 480px){
+    padding: 6rem 16px;
+  }
+  color: rgba($color-main,.7);
+  font: 1.6rem/1.8 'Sawarabi Mincho', sans-serif;
+  font-feature-settings : "pwid";
+}
+
+a{
+  color: lighten($color-acce,5%);
+  &:hover, &:sctive, &:visited {
+    color: darken($color-acce, 10%);
+  }
+}
+
+header{
+  text-align: center;
+  img{
+    width: 100%;
+    max-width: 320px;
+    filter: drop-shadow(0 0 8px rgba($color-main,.2));
+  }
+}
+
+h2{
+  margin: 4rem 0 0;
+}
+
+p{
+  text-align: justify;
+  margin: 2rem 0 0;
+}
+
+ul,ol{
+  padding-left: 1.6em;
+  margin: 2rem 0 0;
+}
+li{
+  margin-top: .6rem;
+}
+
+footer{
+  margin-top: 4rem;
+}
