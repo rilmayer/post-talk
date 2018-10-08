@@ -328,18 +328,24 @@ def lambda_handler(event, context):
                         reply_text = initial_setting_message(current_user_stage, user_item, message_text)['text']
                     elif '手紙を送る' in message_text:
                         # 手紙の送信状況を確認
-                        status = user_item['letter_transaction'][-1].get('status')
-                        if status == 'work_in_sending':
-                            current_user_stage = 13
-                            reply_text = '最後に受け付けた手紙がまだ発送作業中です。発送作業が終了しましたら、新しい手紙を送ることができます。'
-                        elif status is None or status == 'sending_complete':
+                        if len(user_item['letter_transaction']) > 0:
+                            status = user_item['letter_transaction'][-1].get('status')
+                            if status == 'work_in_sending':
+                                current_user_stage = 13
+                                reply_text = '最後に受け付けた手紙がまだ発送作業中です。発送作業が終了しましたら、新しい手紙を送ることができます。'
+                            elif status is None or status == 'sending_complete':
+                                user_stage = 101
+                                user_item['user_stage'] = user_stage
+                                response = table.put_item(Item=user_item)
+                                reply_text = user_item['receiver_name'] + 'さんへ送る手紙の内容を入力してください。\n注意点\n※ 改行は無視されます。\n※ ひとつのメッセージが1段落として手紙が作成されます。\n※ 合計3段落、300文字まで入力できます。」\n「入力し終わったら「おわり」と入力してください'
+                            else:
+                                current_user_stage = 13
+                                reply_text = '最後に受け付けた手紙の発送作業が終了しましたら、新しい手紙を送ることができます。'
+                        else:
                             user_stage = 101
                             user_item['user_stage'] = user_stage
                             response = table.put_item(Item=user_item)
                             reply_text = user_item['receiver_name'] + 'さんへ送る手紙の内容を入力してください。\n注意点\n※ 改行は無視されます。\n※ ひとつのメッセージが1段落として手紙が作成されます。\n※ 合計3段落、300文字まで入力できます。」\n「入力し終わったら「おわり」と入力してください'
-                        else:
-                            current_user_stage = 13
-                            reply_text = '最後に受け付けた手紙の発送作業が終了しましたら、新しい手紙を送ることができます。'
                     elif '手紙を撮影' in message_text:
                         reply_text = '写真をこのルームにアップロードしてください。'
                     elif 'やりとりを見る' in message_text:
