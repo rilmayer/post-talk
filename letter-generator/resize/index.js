@@ -4,6 +4,7 @@ const s3 = new aws.S3({
     apiVersion: '2006-03-01'
 });
 
+// This function refers to https://beyondjapan.com/blog/2017/04/lambda-image-auto-resize
 exports.handler = (event, context, callback) => {
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
@@ -34,13 +35,10 @@ exports.handler = (event, context, callback) => {
                 if (err) {
                     context.done('resize failed', err);
                 } else {
-
-                    var thumbnailKey = key.split('.')[0] + "-thumbnail." + extension;
-
                     s3.putObject({
                         ACL: "public-read",
                         Bucket: bucket + ".resize",
-                        Key: thumbnailKey,
+                        Key: key.split('.')[0] + "-thumbnail." + extension,
                         Body: new Buffer(stdout, 'binary'),
                         ContentType: contentType
                     }, function (err, res) {
@@ -61,13 +59,10 @@ exports.handler = (event, context, callback) => {
                 if (err) {
                     context.done('resize failed', err);
                 } else {
-
-                    var thumbnailKey = key.split('.')[0] + "-preview." + extension;
-
                     s3.putObject({
                         ACL: "public-read",
                         Bucket: bucket + ".resize",
-                        Key: thumbnailKey,
+                        Key: key.split('.')[0] + "-preview." + extension,
                         Body: new Buffer(stdout, 'binary'),
                         ContentType: contentType
                     }, function (err, res) {
