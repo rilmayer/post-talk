@@ -61,10 +61,6 @@ a{
   }
 }
 
-@keyframes splash{
-    0% { opacity: 1 }
-  100% { opacity: 0 }
-}
 header{
   background-image: url(../images/bg.jpg);
   background-attachment: fixed;
@@ -91,24 +87,6 @@ header{
     @media (max-width: 480px){
       width: 80%;
       left: 10%;
-    }
-  }
-  .splash{
-    @media print{
-      display: none;
-    }
-    position: absolute;
-    z-index: 900;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url(../images/paper.png);
-    background-size: 144px;
-    pointer-events: none;
-    animation: splash 1s ease 2s forwards;
-    @media (max-width: 480px){
-      animation: splash .5s ease .5s forwards;
     }
   }
   p{
@@ -158,12 +136,12 @@ section{
   }
   background-image: url(../images/paper.png);
   background-size: 144px;
-  padding: 10rem calc(50% - 600px);
-  @media (max-width: 1296px){
+  padding: 10rem calc(50% - 512px);
+  @media (max-width: 1120px){
     padding: 8rem 48px;
   }
   @media (max-width: 480px){
-    padding: 6rem 16px;
+    padding: 6rem 24px;
   }
   &:nth-child(odd){
     background-image: url(../images/paper-2.png);
@@ -208,9 +186,11 @@ section{
     div{
       width: calc(100% - 44rem);
       float: left;
+      margin-top: 1.6rem;
       @media (max-width: 768px){
         float: none;
         width: 100%;
+        margin-top: 1rem;
       }
     }
     em{
